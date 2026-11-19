@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}下游契约 · 日结发布台{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>下游契约</h1>
+  <p class="muted">
+    每行一列，格式为 <code>列名,integer</code> 或 <code>列名,text</code>，行序即下游文件的列序。
+    修改契约只影响之后的新预览与发布，<strong>不会改动任何已发布文件</strong>；
+    已经打开但尚未确认的预览会因契约版本变化而被拒绝。
+  </p>
+  <form method="post" action="{{ url_for('update_contracts') }}" class="contract-form">
+    <div class="two-col">
+    {% for name in downstream_order %}
+      <div class="contract-card">
+        <h2>{{ downstreams[name].label }} <code>{{ name }}</code></h2>
+        <p class="muted">当前版本 v{{ contracts[name].version }}，指纹 <code class="mono">{{ contracts[name].fingerprint[:12] }}…</code></p>
+        <label for="{{ name }}_contract">契约（按下游列序）</label>
+        <textarea id="{{ name }}_contract" name="{{ name }}_contract" rows="10" spellcheck="false">{{ contract_text[name] }}</textarea>
+        <p class="hint">整数列要求源值是可解析的十进制整数；整数输出会去掉前导零与 <code>+</code> 号。</p>
+      </div>
+    {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="button">保存契约</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

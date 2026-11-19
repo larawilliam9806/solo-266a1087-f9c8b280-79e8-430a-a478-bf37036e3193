@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ status }} · 出错了{% endblock %}
+{% block content %}
+<section class="panel error-panel">
+  <div class="status-code">{{ status }}</div>
+  <h1>{{ message }}</h1>
+  <p class="muted">错误代码：<code>{{ error }}</code></p>
+  {% if details and details.rows %}
+  <details open>
+    <summary>明细（{{ details.rows|length }} 条）</summary>
+    <table class="grid compact">
+      <thead><tr><th>行号</th><th>原因</th></tr></thead>
+      <tbody>
+      {% for item in details.rows %}
+        <tr><td>{{ item.line or item.row }}</td><td>{{ item.reason or item }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </details>
+  {% elif details %}
+  <pre class="code">{{ details | tojson(indent=2) }}</pre>
+  {% endif %}
+  <p><a class="button" href="{{ url_for('upload_page') }}">返回上传</a>
+     <a class="button ghost" href="{{ url_for('index') }}">查看已发布版本</a></p>
+</section>
+{% endblock %}

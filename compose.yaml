@@ -1,0 +1,24 @@
+services:
+  rail-publisher:
+    build: .
+    image: rail-ticket-publisher:local
+    container_name: rail-ticket-publisher
+    ports:
+      - "8000:8000"
+    environment:
+      DATA_DIR: /data
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      PORT: "8000"
+    volumes:
+      - rail-data:/data
+    restart: unless-stopped
+    stop_grace_period: 35s
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  rail-data:

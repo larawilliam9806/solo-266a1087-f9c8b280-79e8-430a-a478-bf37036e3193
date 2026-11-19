@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ detail.day }} 发布记录{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>{{ detail.day }} 的发布记录</h1>
+  <p class="muted">当前修订：<strong>r{{ detail.current_rev }}</strong>。三个文件始终以同一修订号成组下载。</p>
+  {% if detail.revisions %}
+  <table class="grid">
+    <thead><tr><th>修订</th><th>发布时间</th><th>数据行</th><th>原件</th><th>结算 v</th><th>客流 v</th><th>下载</th></tr></thead>
+    <tbody>
+    {% for rev in detail.revisions %}
+      <tr{% if rev.rev == detail.current_rev %} class="current"{% endif %}>
+        <td><strong>r{{ rev.rev }}</strong>{% if rev.rev == detail.current_rev %} <span class="tag">当前</span>{% endif %}</td>
+        <td>{{ rev.created_at }}</td>
+        <td>{{ rev.row_count }}</td>
+        <td title="{{ rev.original.sha256 }}">{{ rev.original.name }}<br><span class="muted mono">{{ rev.original.sha256[:12] }}… · {{ rev.original.size }} B</span></td>
+        <td>v{{ rev.downstreams.settlement.contract_version }}<br><span class="muted mono">{{ rev.downstreams.settlement.sha256[:12] }}…</span></td>
+        <td>v{{ rev.downstreams.ridership.contract_version }}<br><span class="muted mono">{{ rev.downstreams.ridership.sha256[:12] }}…</span></td>
+        <td class="actions">
+          <a class="button small" href="{{ url_for('download', day=detail.day, rev=rev.rev, kind='settlement') }}">结算</a>
+          <a class="button small" href="{{ url_for('download', day=detail.day, rev=rev.rev, kind='ridership') }}">客流</a>
+          <a class="button small ghost" href="{{ url_for('download', day=detail.day, rev=rev.rev, kind='original') }}">原件</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">该日还没有发布记录。</p>
+  {% endif %}
+</section>
+
+{% if detail.revisions %}
+{% set latest = detail.revisions[0] %}
+<section class="panel">
+  <h2>修订 r{{ latest.rev }} 的列契约</h2>
+  <div class="two-col">
+    {% for name in downstream_order %}
+    <div class="contract-card">
+      <h3>{{ downstreams[name].label }}</h3>
+      <ol class="columns">
+        {% for col in latest.downstreams[name].columns %}
+        <li><code>{{ col.name }}</code><span class="tag {{ col.type }}">{{ col.type }}</span></li>
+        {% endfor %}
+      </ol>
+      <p class="muted">发布时契约版本 v{{ latest.downstreams[name].contract_version }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}发布记录 · 日结发布台{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>已发布版本</h1>
+  <p class="muted">每天的修订号从 1 递增。任一修订的三个文件一经发布即不可变；修改下游契约不会改动历史文件。</p>
+  {% if startup_problems %}
+  <div class="alert danger">
+    <strong>启动自检发现问题：</strong>
+    <ul>
+    {% for problem in startup_problems %}
+      <li>{{ problem.day }} 修订 {{ problem.rev }} 缺少 {{ problem.missing|length }} 个文件对象，该版本下载将返回 503（不会回退到其他修订）。</li>
+    {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if days %}
+  <table class="grid">
+    <thead><tr><th>日期</th><th>当前修订</th><th>修订数</th><th>最近发布</th><th></th></tr></thead>
+    <tbody>
+    {% for day in days %}
+      <tr>
+        <td><a href="{{ url_for('day_page', day=day.day) }}">{{ day.day }}</a></td>
+        <td>r{{ day.current_rev }}</td>
+        <td>{{ day.revision_count }}</td>
+        <td>{{ day.updated_at }}</td>
+        <td class="actions">
+          <a class="button small" href="{{ url_for('download', day=day.day, rev=day.current_rev, kind='settlement') }}">结算 CSV</a>
+          <a class="button small" href="{{ url_for('download', day=day.day, rev=day.current_rev, kind='ridership') }}">客流 CSV</a>
+          <a class="button small ghost" href="{{ url_for('download', day=day.day, rev=day.current_rev, kind='original') }}">原件</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">还没有发布记录。<a href="{{ url_for('upload_page') }}">上传一份 CSV</a> 开始。</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <h2>当前下游契约</h2>
+  <div class="two-col">
+  {% for name in downstream_order %}
+    <div class="contract-card">
+      <h3>{{ downstreams[name].label }} <code>{{ name }}</code></h3>
+      <p class="muted">版本 v{{ contracts[name].version }} · {{ downstreams[name].description }}</p>
+      <ol class="columns">
+        {% for col in contracts[name].columns %}
+        <li><code>{{ col.name }}</code><span class="tag {{ col.type }}">{{ col.type }}</span></li>
+        {% endfor %}
+      </ol>
+      <a class="button small ghost" href="{{ url_for('contracts_page') }}">编辑契约</a>
+    </div>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

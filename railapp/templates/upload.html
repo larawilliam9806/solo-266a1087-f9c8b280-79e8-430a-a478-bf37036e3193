@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}上传与预览 · 日结发布台{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>上传某日 CSV 并预览</h1>
+  <p class="muted">
+    上传该日<strong>完整</strong>原始 CSV（不超过 1 MB）。系统会为
+    {% for name in downstream_order %}{{ downstreams[name].label }}{% if not loop.last %}、{% endif %}{% endfor %}
+    分别校验必需列顺序与整数/文本类型。缺列、类型错误或重复表头会整批拒绝，已发布版本继续可取。
+  </p>
+  {% if days %}
+  <p class="hint">最近有记录的日期：
+    {% for d in days %}<a class="chip" href="{{ url_for('day_page', day=d.day) }}">{{ d.day }} · r{{ d.current_rev }}</a>{% endfor %}
+  </p>
+  {% endif %}
+
+  <form id="preview-form" enctype="multipart/form-data" class="upload-form">
+    <div class="field">
+      <label for="day">业务日期</label>
+      <input type="date" id="day" name="day" required>
+    </div>
+    <div class="field">
+      <label for="file">完整 CSV 文件（≤ 1 MB，UTF-8）</label>
+      <input type="file" id="file" name="file" accept=".csv,text/csv" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="button">上传并预览</button>
+      <span id="preview-status" class="status" role="status"></span>
+    </div>
+  </form>
+
+  <div id="preview-root" hidden>
+    <div id="preview-summary" class="summary-grid"></div>
+    <div id="preview-downstreams" class="downstream-stack"></div>
+    <div class="form-actions publish-actions">
+      <button id="confirm-button" class="button primary">确认发布</button>
+      <button id="discard-button" class="button ghost">放弃预览</button>
+      <span id="confirm-status" class="status" role="status"></span>
+    </div>
+  </div>
+</section>
+
+<template id="downstream-template">
+  <section class="panel downstream">
+    <header>
+      <h2><span class="ds-label"></span> <code class="ds-name"></code></h2>
+      <span class="badge ds-badge"></span>
+    </header>
+    <p class="ds-contract muted"></p>
+    <div class="ds-missing alert danger" hidden></div>
+    <h3>转换结果预览 <span class="muted ds-rowinfo"></span></h3>
+    <div class="table-scroll"><table class="grid preview-table"><thead></thead><tbody></tbody></table></div>
+    <p class="muted ds-note" hidden></p>
+    <div class="ds-issues" hidden>
+      <h3>不兼容的行列</h3>
+      <div class="table-scroll"><table class="grid issue-table">
+        <thead><tr><th>数据行</th><th>文件行号</th><th>列</th><th>值</th><th>原因</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="muted issue-note"></p>
+    </div>
+  </section>
+</template>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}
